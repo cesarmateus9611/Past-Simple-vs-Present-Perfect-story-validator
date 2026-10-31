@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Buen Vivir Story Scramble</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e272e;
+            color: #d2dae2;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            color: #0be881;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #808e9b;
+            font-style: italic;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 1000px;
+        }
+        @media(min-width: 800px) {
+            .app-container {
+                flex-direction: row;
+            }
+        }
+        .panel {
+            background: #2c3e50;
+            padding: 20px;
+            border-radius: 12px;
+            flex: 1;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel h2 {
+            color: #f1c40f;
+            text-align: center;
+            margin-top: 0;
+            border-bottom: 2px solid #34495e;
+            padding-bottom: 10px;
+        }
+        .sentence {
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            box-shadow: 0 3px 0 #bdc3c7;
+            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none;
+            line-height: 1.4;
+        }
+        .sentence:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #bdc3c7;
+        }
+        .sentence:hover {
+            background: #fff;
+        }
+        
+        /* Validation Styles */
+        .sentence.correct {
+            background: #d5f5e3;
+            color: #27ae60;
+            border: 2px solid #2ecc71;
+            box-shadow: 0 3px 0 #27ae60;
+        }
+        .sentence.incorrect {
+            background: #fadbd8;
+            color: #c0392b;
+            border: 2px solid #e74c3c;
+            box-shadow: 0 3px 0 #c0392b;
+            animation: shake 0.4s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+            width: 100%;
+        }
+        .btn-check {
+            background: #0be881;
+            color: #1e272e;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: 900;
+            border-radius: 8px;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #05c46b;
+            transition: 0.2s;
+            text-transform: uppercase;
+        }
+        .btn-check:hover {
+            transform: translateY(2px);
+            box-shadow: 0 3px 0 #05c46b;
+        }
+        .btn-check:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #05c46b;
+        }
+        .feedback-msg {
+            font-size: 20px;
+            font-weight: bold;
+            margin-top: 15px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🌿 The Story Validator</h1>
+    <div class="subtitle">Present Perfect & Past Simple Sequence Challenge</div>
+
+    <div class="app-container">
+        <!-- Scrambled Bank -->
+        <div class="panel">
+            <h2>🧩 Scrambled Fragments</h2>
+            <div id="bank"></div>
+        </div>
+
+        <!-- Story Board -->
+        <div class="panel">
+            <h2 style="color: #0be881;">📖 Your Story Timeline</h2>
+            <div id="board"></div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="btn-check" onclick="verifySequence()">Verify Sequence</button>
+        <div id="feedback" class="feedback-msg"></div>
+    </div>
+
+    <script>
+        // The master array with the correct sequence (1 to 12)
+        const correctStory = [
+            "For many years, our community has lived near the Magdalena River, but we have faced serious environmental challenges.",
+            "It all started when I visited my grandfather last month and asked him about the history of our beautiful town.",
+            "He walked to his bedroom and opened a heavy wooden chest that he has kept since he was a teenager.",
+            "Inside the chest, he showed me a valuable glass bottle full of crystal-clear water.",
+            "\"I collected this water in 1980,\" he explained with a sad smile, \"back when the river was completely clean.\"",
+            "I was shocked because, in recent years, people have thrown tons of plastic waste and metal cans into the water.",
+            "That same afternoon, I promised my grandfather that I would help restore the river to its original beauty.",
+            "The next morning, I called all my friends and we organized the first \"Buen Vivir\" cleanup festival.",
+            "Since that day, our community has removed hundreds of plastic bags from the fragile ecosystem.",
+            "Yesterday, my grandfather walked to the riverbank, looked at the clean water, and said we did a helpful job.",
+            "We haven't finished our environmental mission yet, but nature has already started to heal.",
+            "I have learned that if we respect durable materials and protect the water, we can save our home for future generations."
+        ];
+
+        let scrambledData = [];
+
+        function initApp() {
+            // Shuffle the sentences for the bank
+            scrambledData = [...correctStory].sort(() => Math.random() - 0.5);
+            const bank = document.getElementById('bank');
+            
+            scrambledData.forEach((sentence, index) => {
+                let div = document.createElement('div');
+                div.className = 'sentence';
+                div.innerText = sentence;
+                div.id = 's-' + index;
+                div.onclick = () => moveSentence(div);
+                bank.appendChild(div);
+            });
+        }
+
+        function moveSentence(element) {
+            const bank = document.getElementById('bank');
+            const board = document.getElementById('board');
+            
+            // Remove validation classes when moved
+            element.classList.remove('correct', 'incorrect');
+            
+            if (element.parentElement === bank) {
+                board.appendChild(element); // Move to story
+            } else {
+                bank.appendChild(element); // Move back to bank
+            }
+        }
+
+        function verifySequence() {
+            const board = document.getElementById('board');
+            const userSentences = board.children;
+            const feedback = document.getElementById('feedback');
+            
+            if (userSentences.length === 0) {
+                feedback.innerText = "⚠️ Your timeline is empty! Tap fragments to start.";
+                feedback.style.color = "#f1c40f";
+                return;
+            }
+
+            let allCorrect = true;
+            let partsChecked = 0;
+
+            for (let i = 0; i < userSentences.length; i++) {
+                const el = userSentences[i];
+                // Check if the sentence text matches the exact index in the correctStory array
+                if (el.innerText === correctStory[i]) {
+                    el.classList.remove('incorrect');
+                    el.classList.add('correct');
+                    partsChecked++;
+                } else {
+                    el.classList.remove('correct');
+                    el.classList.add('incorrect');
+                    allCorrect = false;
+                }
+            }
+
+            if (allCorrect && userSentences.length === 12) {
+                feedback.innerText = "🏆 PERFECT TIMELINE! You saved the river!";
+                feedback.style.color = "#0be881";
+            } else if (allCorrect && userSentences.length < 12) {
+                feedback.innerText = `👍 Looking good! You have ${partsChecked} correct parts. Keep adding!`;
+                feedback.style.color = "#f1c40f";
+            } else {
+                feedback.innerText = "❌ Timeline Error! Check the red fragments and your Grammar Rules.";
+                feedback.style.color = "#ff3f34";
+            }
+        }
+
+        // Initialize on load
+        window.onload = initApp;
+    </script>
+</body>
+</html>
